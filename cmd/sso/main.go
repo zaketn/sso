@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/zaketn/sso/internal/app"
 	"github.com/zaketn/sso/internal/config"
 	"log/slog"
 	"os"
@@ -19,6 +20,9 @@ func main() {
 
 	log.Info("starting application with config", slog.Any("config", cfg))
 
+	application := app.New(log, cfg.GRPC.Port, cfg.StoragePath, cfg.TokenTTL)
+
+	application.GRPCServer.MustRun()
 }
 
 func setupLogger(env string) *slog.Logger {
