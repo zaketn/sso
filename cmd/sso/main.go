@@ -17,7 +17,6 @@ const (
 
 func main() {
 	cfg := config.MustLoad()
-
 	log := setupLogger(cfg.Env)
 
 	log.Info("starting application with config", slog.Any("config", cfg))
