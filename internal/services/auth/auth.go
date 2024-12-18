@@ -35,6 +35,8 @@ type AppProvider interface {
 
 var (
 	ErrInvalidCredentials = errors.New("the credentials is invalid")
+	ErrInvalidAppId       = errors.New("the app id is invalid")
+	ErrUserExists         = errors.New("user already exists")
 )
 
 // New returns new instance of the Auth structure
@@ -66,32 +68,30 @@ func (a *Auth) Login(ctx context.Context, email, password string, appId int) (to
 	usr, err := a.userProvider.User(ctx, email)
 	if err != nil {
 		if errors.Is(err, storage.ErrUserNotFound) {
-			a.log.Warn("user not found", err)
+			log.Warn("user not found", err)
 
 			return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 		}
 
-		a.log.Error("failed to get user", err)
+		log.Error("failed to get user", err)
 
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 	}
 
 	if err := bcrypt.CompareHashAndPassword(usr.PassHash, []byte(password)); err != nil {
-		a.log.Error("invalid credentials", err)
+		log.Error("invalid credentials", err)
 
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 	}
 
 	app, err := a.appProvider.App(ctx, appId)
 	if err != nil {
-		a.log.Error("invalid app", err)
-
-		return "", fmt.Errorf("%s: %w", op, storage.ErrAppNowFound)
+		return "", fmt.Errorf("%s: %w", op, err)
 	}
 
 	token, err = jwt.NewToken(usr, app, a.tokenTTL)
 	if err != nil {
-		a.log.Error("failed generate token", err)
+		log.Error("failed generate token", err)
 
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
@@ -116,6 +116,12 @@ func (a *Auth) RegisterNewUser(ctx context.Context, email, password string) (use
 
 	id, err := a.userSaver.SaveUser(ctx, email, passHash)
 	if err != nil {
+		if errors.Is(err, storage.ErrUserExists) {
+			log.Error("the user already exists")
+
+			return 0, fmt.Errorf("%s: %w", op, ErrUserExists)
+		}
+
 		log.Error("failed to save user")
 
 		return 0, fmt.Errorf("%s: %w", op, err)
@@ -134,6 +140,12 @@ func (a *Auth) IsAdmin(ctx context.Context, userId int64) (bool, error) {
 
 	isAdmin, err := a.userProvider.IsAdmin(ctx, userId)
 	if err != nil {
+		if errors.Is(err, storage.ErrAppNowFound) {
+			log.Error("failed to get admin info")
+
+			return false, fmt.Errorf("%s: %w", op, ErrInvalidAppId)
+		}
+
 		log.Error("failed to get admin info")
 
 		return false, fmt.Errorf("%s: %w", op, err)
