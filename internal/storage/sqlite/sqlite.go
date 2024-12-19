@@ -119,7 +119,7 @@ func (s *Storage) App(ctx context.Context, appId int) (models.App, error) {
 
 	if err := row.Scan(&app.ID, &app.Name, &app.Secret); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return models.App{}, fmt.Errorf("%s: %w", op, storage.ErrAppNowFound)
+			return models.App{}, fmt.Errorf("%s: %w", op, storage.ErrAppNotFound)
 		}
 
 		return models.App{}, fmt.Errorf("%s: %w", op, err)

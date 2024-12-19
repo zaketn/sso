@@ -140,7 +140,7 @@ func (a *Auth) IsAdmin(ctx context.Context, userId int64) (bool, error) {
 
 	isAdmin, err := a.userProvider.IsAdmin(ctx, userId)
 	if err != nil {
-		if errors.Is(err, storage.ErrAppNowFound) {
+		if errors.Is(err, storage.ErrAppNotFound) {
 			log.Error("failed to get admin info")
 
 			return false, fmt.Errorf("%s: %w", op, ErrInvalidAppId)
