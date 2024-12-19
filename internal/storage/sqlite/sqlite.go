@@ -104,3 +104,26 @@ func (s *Storage) IsAdmin(ctx context.Context, userId int64) (bool, error) {
 
 	return isAdmin, nil
 }
+
+func (s *Storage) App(ctx context.Context, appId int) (models.App, error) {
+	const op = "storage.sqlite.App"
+
+	var app models.App
+
+	q, err := s.db.Prepare("SELECT id, name, secret FROM apps WHERE id=?")
+	if err != nil {
+		return models.App{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	row := q.QueryRowContext(ctx, appId)
+
+	if err := row.Scan(&app.ID, &app.Name, &app.Secret); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.App{}, fmt.Errorf("%s: %w", op, storage.ErrAppNowFound)
+		}
+
+		return models.App{}, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return app, nil
+}
