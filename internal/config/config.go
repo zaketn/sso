@@ -17,12 +17,16 @@ type Config struct {
 
 type GRPCConfig struct {
 	Port    int
-	Timeout string
+	Timeout time.Duration
 }
 
 func MustLoad() *Config {
 	cfgPath := fetchConfigPath()
 
+	return MustLoadByPath(cfgPath)
+}
+
+func MustLoadByPath(cfgPath string) *Config {
 	if cfgPath == "" {
 		panic("config file is not specified")
 	}
