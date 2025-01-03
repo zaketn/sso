@@ -84,6 +84,8 @@ func (a *Auth) Login(ctx context.Context, email, password string, appId int) (to
 		return "", fmt.Errorf("%s: %w", op, ErrInvalidCredentials)
 	}
 
+	log.Info("user logged in successfully")
+
 	app, err := a.appProvider.App(ctx, appId)
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", op, err)
@@ -106,6 +108,7 @@ func (a *Auth) RegisterNewUser(ctx context.Context, email, password string) (use
 		slog.String("op", op),
 		slog.String("email", email),
 	)
+	log.Info("registering new user")
 
 	passHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -126,6 +129,8 @@ func (a *Auth) RegisterNewUser(ctx context.Context, email, password string) (use
 
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
+
+	log.Info("register new user")
 
 	return id, nil
 }
